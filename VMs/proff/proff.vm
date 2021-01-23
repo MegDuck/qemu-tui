@@ -1,0 +1,5 @@
+# syntax - value:key
+# true automatically convert to True in python
+# false automatically convert to False in python
+arch:x86_64
+acpi:True
