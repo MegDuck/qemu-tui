@@ -1,5 +1,11 @@
 import os
-def createdb(dirpath, name):
+
+
+# create database file
+def createdb(dirpath : str, name : str):
+    """
+    Create db in dirpath with name {name}
+    """
     if os.path.exists(dirpath):
         pass
     else:
@@ -7,12 +13,17 @@ def createdb(dirpath, name):
     with open(f"{dirpath}{name}.vm", "w") as db:
         db.write("# syntax - value:key\n# true automatically convert to True in python\n# false automatically convert to False in python")
         db.close()
-def readdb(path):
+
+
+def readdb(path : str) -> (int, dict):
+    """
+    read db and return as dict {"key":"value"...}
+    """
     dict = {}
     if os.path.exists(path):
         pass
     else:
-        return 1
+        raise FileNotFoundError(2, f"file {path} not found!")
     with open(path, "r") as db:
         content_lines = db.readlines()
         for line in content_lines:
@@ -30,15 +41,20 @@ def readdb(path):
                 print(f"Error on line {content_lines.index(line)} with content '{line}'")
     return dict
 
-def writedb(path, key, value):
+#write to db
+def writedb(path, key, value) -> int:
+    """
+    write to db on path {path} name {key} with value {value}
+    """
     if key == "" or value == "":
         return 1
     if os.path.exists(path):
-        pass
+        pass 
     else:
         return 1
     with open(path, "a") as db:
         db.write(f"\n{key}:{value}")
+    return 0
 
 if __name__ == "__main__":
     print(readdb("./tests/db.vm"))

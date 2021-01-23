@@ -11,7 +11,7 @@ def init() -> int:
     if os.path.exists("./VMs") == False:
         os.mkdir("VMs")
     
-    def pwd_init(local_pwd):
+    def pwd_init(local_pwd : str):
         print("Are you want to initialize VMs directory in other locaion?(Enter if dont want) ")
         new_pwd = input(f"[{local_pwd}]: ")
         if new_pwd != "":
@@ -39,6 +39,7 @@ def create_vm() -> int:
 
     """
     clear
+
     #ask for architecture(arch)
     print("choose architecture for vm(default: x86_64)")
     while True:
@@ -111,7 +112,6 @@ def create_vm() -> int:
             cpath = False
             try:
                 file = open(path, "rb")
-                print(file.read())
                 print("Can open the iso")
                 cpath = True
             except IOError as e:
@@ -124,6 +124,7 @@ def create_vm() -> int:
                     break
                 else:
                     print("not correct path!")
+        
         createdb(f"./VMs/{name}/", name)
         writedb(f"./VMs/{name}/{name}.vm", "arch", arch)
         writedb(f"./VMs/{name}/{name}.vm", "acpi", "True")
@@ -131,16 +132,26 @@ def create_vm() -> int:
         print(f"VM with name - {name} and memory {memory} created!")
         return 0
 
-def vm_list():
+def vm_list() -> int:
     """
     Display all machines.
     """
     counter = 0
-    for i in os.listdir("./VMs"):
-        print(f"[{counter}]: {i}")
-        counter += 1
+    try:
+        for i in os.listdir("./VMs"):
+            print(f"[{counter}]: {i}")
+            counter += 1
+    except FileNotFoundError:
+        print("can't find ./VMs dir!")
+        return 1
+    return 0
 
-def run_vm(vm_name) -> None:
+def run_vm(vm_name : str) -> None:
+    if vm_name in os.listdir("./VMs/"):
+        print(f"{vm_name} found..")
+    else:
+        print(f"Cannot find vm with name {vm_name}")
+        return 1
 
     usb = False
     command = "qemu-system-"
@@ -150,20 +161,18 @@ def run_vm(vm_name) -> None:
     #add hda to command
     command = command + f" -hda ./VMs/{vm_name}/{vm_name}"
 
-    if vm_name in os.listdir("./VMs/"):
-        print(f"{vm_name} found..")
-    else:
-        print(f"Cannot find vm with name {vm_name}")
-        return 1
+
     #check for iso and if iso found in dir add to command -cdrom 
     if f"{vm_name}.iso" in os.listdir(f"./VMs/{vm_name}/"):
         usb = True
         print("iso found..")
     if usb == True:
         command = command + f" -cdrom ./VMs/{vm_name}/{vm_name}.iso"
-    
+    command = command + " -m 1280"
     os.system(command)
-def display_menu():
+
+
+def display_menu() -> None:
     """
     display your machines and little help about.
     """
@@ -171,14 +180,33 @@ def display_menu():
     print(open(f"{pwd}/resources/motd").read())
     print("Your VMs: ")
     vm_list()
+    print()
     while True:
         try:
             stdin = qemu_input(promt="(>): ", histfile=".histfile")
             if stdin.lower().split()[0] == "create" or stdin.lower().split()[0] == "c":
                 create_vm()
+
+            elif stdin.lower().split(" ")[0] in ["env"]:
+                vm_name = ""
+                try:
+                    vm_name = stdin.split(" ")[1]
+                except IndexError:
+                    print("incorrect use: env <VM name>")
+                    pass
+                if os.path.exists(f"./VMs/{vm_name}"):
+                    print(f"┌{vm_name}")
+                    for i in os.listdir(f"./VMs/{vm_name}/"):
+                        if os.path.islink(f"./VMs/{vm_name}/{i}"):
+                            print(f"─ @{i}")
+                        else:
+                            print(f"─ {i}")
+                        
             elif stdin.lower().split()[0] == "exit" or stdin.lower().split()[0] == "e":
                     break
+
             elif stdin.lower().split(" ")[0] in ["remove", "rm"]:
+                vm_name = ""
                 try:
                     vm_name = stdin.lower().split(" ")[1]
                     try:
@@ -195,16 +223,19 @@ def display_menu():
                         print("No VM with this name!")
                 except IndexError:
                     print("Incorrect use: remove <VM Name>")
+
             elif stdin.lower().split(" ")[0] in ["r", "run"]:
                 try:
                     vm_name = stdin.split()[1]
                     run_vm(vm_name)
                 except IndexError:
                     print("incorrect use: run <VM_name>")
+
             elif stdin.lower() in ["list", "l"]:
                 vm_list()
         except IndexError:
             pass
+
 def main():
     init()
     display_menu()

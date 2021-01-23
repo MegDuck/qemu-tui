@@ -4,10 +4,8 @@ Help for new in Qemu TUI
 
 create - create VM
 
-connect <iso_path, disk_path> <VM name> - connect iso to VM
-
-unconnect <iso_path, disk_path>
-
 remove <VM_name> - remove disks, connected iso, and all data of VM
 
 run <VM_name>
+
+help - for a detalied help.
